@@ -18,8 +18,13 @@
 // }
 // #endif
 
-///  \author Michele Brambilla <mib.mic@gmail.com>
-///  \date Wed Jun 08 15:19:27 2016
+
+/*! Uses 0MQ as data streamer.
+*
+*  \author Michele Brambilla <mib.mic@gmail.com>
+*  \date Wed Jun 08 15:19:27 2016
+*/
+
 struct ZmqGen {
   
   ZmqGen(uparam::Param p) {
