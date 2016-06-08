@@ -24,3 +24,32 @@ while ``KafkaGen`` the name of the *topic* and the *brokers*
 start, pause or stop the generator.  The generator is started via the ``run``
 method, that requires a pointer to the data structure and the number of
 elements.
+
+```
+//typedef ZmqGen generator_t;
+typedef KafkaGen generator_t;
+
+int main() {
+
+  uparam::Param input;
+  input["port"] = "1235";
+  input["control"] = "control.in";
+  input["topic"] = "test_0";
+  input["brokers"] = "localhost";
+  
+  input["filename"] = "../../neventGenerator/rita22012n006190.hdf";
+
+  // read NeXus or mcstas
+  NeXusSource<Rita2,int64_t> stream(input);
+  
+  uint64_t* d = new uint64_t[1024];
+  for(int i =0;i<1024;++i)
+    d[i] = 2*i+1;
+
+  Generator<generator_t,HeaderJson> g(input);
+
+  g.run(d,1024);
+
+  return 0;
+}
+```
