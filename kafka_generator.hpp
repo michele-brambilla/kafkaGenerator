@@ -8,34 +8,20 @@
 
 #include "uparam.hpp"
 
-
-/* Use of this partitioner is pretty pointless since no key is provided
- * in the produce() call. */
-class MyHashPartitionerCb : public RdKafka::PartitionerCb {
- public:
-  int32_t partitioner_cb (const RdKafka::Topic *topic, const std::string *key,
-                          int32_t partition_cnt, void *msg_opaque) {
-    return djb_hash(key->c_str(), key->size()) % partition_cnt;
-  }
- private:
-
-  static inline unsigned int djb_hash (const char *str, size_t len) {
-    unsigned int hash = 5381;
-    for (size_t i = 0 ; i < len ; i++)
-      hash = ((hash << 5) + hash) + str[i];
-    return hash;
-  }
-};
+/*! \struct KafkaGen
+ *  Uses Kafka as the streamer
+*
+*  \author Michele Brambilla <mib.mic@gmail.com>
+*  \date Wed Jun 08 15:19:16 2016
+*/
 
 
-
-
-
-///  \author Michele Brambilla <mib.mic@gmail.com>
-///  \date Wed Jun 08 15:19:16 2016
 struct KafkaGen {
   
   KafkaGen(uparam::Param p) : brokers(p["brokers"]), topic_str(p["topic"]) {
+    /*! @param p see uparam::Param for description. Must contain "brokers" and "topic" key-value */
+    /*! Connects to the "broker" clients of the Kafka messaging system. Streams data to the "topic" topic.
+     */
     conf = RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL);
     tconf = RdKafka::Conf::create(RdKafka::Conf::CONF_TOPIC);
 
@@ -48,7 +34,7 @@ struct KafkaGen {
     }
 
     if(topic_str.empty()) {
-      
+      //TODO
     }
     
     producer = RdKafka::Producer::create(conf, errstr);
@@ -68,7 +54,9 @@ struct KafkaGen {
 
   template<typename T>
   void send(T* data,const int size, const int flag = 0) {
-
+    /*! @param data data to be sent
+     *  @param size number of elements
+     *  @param flag optional flag (unused) */
     RdKafka::ErrorCode resp =
       producer->produce(topic, partition,
                         RdKafka::Producer::RK_MSG_COPY /* Copy payload */,
@@ -90,8 +78,6 @@ private:
   int32_t partition = RdKafka::Topic::PARTITION_UA;
   int64_t start_offset = RdKafka::Topic::OFFSET_BEGINNING;
 
-  int opt;
-  MyHashPartitionerCb hash_partitioner;
   RdKafka::Conf *conf;
   RdKafka::Conf *tconf;
   RdKafka::Producer *producer;
