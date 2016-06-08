@@ -34,6 +34,7 @@
 
 #include <iostream>
 #include <string>
+#include <sstream>
 #include <cstdlib>
 #include <cstdio>
 #include <csignal>
@@ -54,15 +55,24 @@ static void sigterm (int sig) {
   run = false;
 }
 
-class ExampleDeliveryReportCb : public RdKafka::DeliveryReportCb {
- public:
-  void dr_cb (RdKafka::Message &message) {
-    std::cout << "Message delivery for (" << message.len() << " bytes): " <<
-        message.errstr() << std::endl;
-    if (message.key())
-      std::cout << "Key: " << *(message.key()) << ";" << std::endl;
-  }
-};
+// class ExampleDeliveryReportCb : public RdKafka::DeliveryReportCb {
+//  public:
+//   void dr_cb (RdKafka::Message &message) {
+//     std::cout << "Message delivery for (" << message.len() << " bytes): " <<
+//         message.errstr() << std::endl;
+//     // if (message.key())
+//       // std::cout << "Key: " << *(message.key()) << ";" << std::endl;
+//     uint64_t guess;
+//     std::istringstream iss(*(message.key()));
+//     iss >> guess ;
+//     if (iss.eof() == false)
+//       std::cout << "its not int\n";
+//     else
+//       std::cout << "its int\n";
+
+    
+//   }
+// };
 
 
 class ExampleEventCb : public RdKafka::EventCb {
@@ -115,6 +125,11 @@ class MyHashPartitionerCb : public RdKafka::PartitionerCb {
 };
 
 void msg_consume(RdKafka::Message* message, void* opaque) {
+  std::istringstream iss;
+  std::string s(static_cast<const char *>(message->payload()));
+  uint64_t guess = *(static_cast<const uint64_t *>(message->payload()));
+
+
   switch (message->err()) {
     case RdKafka::ERR__TIMED_OUT:
       break;
@@ -125,9 +140,16 @@ void msg_consume(RdKafka::Message* message, void* opaque) {
       if (message->key()) {
         std::cout << "Key: " << *message->key() << std::endl;
       }
-      printf("%.*s\n",
-        static_cast<int>(message->len()),
-        static_cast<const char *>(message->payload()));
+
+      if (s[0]// tatic_cast<const char *>(message->payload())[0]
+          == '{')
+        std::cout << "its not int " << s << std::endl;
+      else
+        std::cout << "its int: " << guess << std::endl;
+
+      // printf("%.*s\n",
+      //   static_cast<int>(message->len()),
+      //   static_cast<const char *>(message->payload()));
       break;
 
     case RdKafka::ERR__PARTITION_EOF:
@@ -414,7 +436,7 @@ int main (int argc, char **argv) {
                 << (start_offset = msg->offset()+1) << "\t"
                 << (msg->err() == RdKafka::ERR__PARTITION_EOF)
                 << std::endl;
-      //      msg_consume(msg, NULL);
+      msg_consume(msg, NULL);
     }
     else {
       consumer->stop(topic,partition);

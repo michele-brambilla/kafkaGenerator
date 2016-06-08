@@ -1,11 +1,28 @@
-#include <generator.hpp>
+#include "generator.hpp"
+
+
+//typedef ZmqGen generator_t;
+typedef KafkaGen generator_t;
 
 
 
+
+///////////////////////////////////////////////
+///////////////////////////////////////////////
+///
+/// Main program for using the flexible event generator
+///
+///  \author Michele Brambilla <mib.mic@gmail.com>
+///  \date Wed Jun 08 15:14:10 2016
 int main() {
 
-  Generator<ZmqGen,HeaderJson> g(1235,"control.in");
+  uparam::Param input;
+  input["port"] = "1235";
+  input["control"] = "control.in";
+  input["topic"] = "test_0";
+  input["brokers"] = "localhost";
 
+  Generator<generator_t,HeaderJson> g(input);
 
   uint64_t* d = new uint64_t[1024];
   
@@ -14,13 +31,8 @@ int main() {
 
   // read NeXus or mcstas
 
-
-  
-
   g.run(d,1024);
 
-
   return 0;
-
 }
 

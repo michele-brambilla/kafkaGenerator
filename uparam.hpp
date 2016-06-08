@@ -1,9 +1,12 @@
 #ifndef UPARAM_H
 #define UPARAM_H
 
+#include <iostream>
 #include <string>
 #include <algorithm>
 #include <map>
+#include <fstream>
+
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
@@ -46,10 +49,10 @@ namespace uparam {
     std::string& operator[](const std::string& s){
       return params[s];
     }
-    // void print(std::ostream& os = std::cout) const {
-    //   for (const_iterator i = begin(); i != end(); ++i)
-    //     util::pretty_print(i->first, i->second, "", os);
-    // }
+    void print(std::ostream& os = std::cout) const {
+      for (const_iterator i = begin(); i != end(); ++i)
+        os << i->first << "\t:\t" << i->second << "\n";
+    }
   private:
     map_t params;
     std::string to_upper(std::string& in){

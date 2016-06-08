@@ -1,6 +1,7 @@
+#ifndef _GENERATOR_H
+#define _GENERATOR_H
+
 #include <iostream>
-#include <string>
-#include <sstream>
 #include <fstream>
 #include <map>
 #include <assert.h>
@@ -8,51 +9,29 @@
 #include <stdlib.h>
 #include <time.h>
 
-//#include <zmq.hpp>
-#include <zmq.h>
-
-#include "uparam.hpp"
+#include "zmq_generator.hpp"
+#include "kafka_generator.hpp"
 
 extern "C" {
 #include "cJSON/cJSON.h"
 }
 
-#ifdef HAVE_CXX11
-using std::to_string;
-#else
-std::string to_string(const int& value) {
-  std::stringstream ss;
-  ss << value;
-  return ss.str();
-}
 
-#endif
-
-
-
+///  \author Michele Brambilla <mib.mic@gmail.com>
+///  \date Wed Jun 08 15:19:52 2016
 template<typename Streamer, typename Header>
 struct Generator {
   typedef  Generator self_t;
 
-  Generator(const int& p, 
-            std::string control, 
-            const int& m = 1) : port(p), 
+Generator(const uparam::Param& p,
+            const int& m = 1) : streamer(p), 
                                 multiplier(m), 
                                 head("header.in") {
-    context = zmq_ctx_new ();
-    socket = zmq_socket (context, ZMQ_PUSH);
-    std::cout << "tcp://*:"+to_string(port) << std::endl;
-    int rc = zmq_bind(socket,("tcp://*:"+to_string(port)).c_str());
-    assert (rc == 0);
-    //    socket.setsockopt(zmq::SNDHWM, 100);
-
-    get_control();
-
-    return;
+get_control();
   }
 
   template<class T>
-  void run(const T* stream, int nev = 0) {
+  void run(T* stream, int nev = 0) {
     
     int pulseID = 0;
     int count = 0;
@@ -63,11 +42,11 @@ struct Generator {
     while(ctl["run"] != "stop") {
       
       if(ctl["run"] == "run") {
-        zmq_send(socket,head.get().c_str(),head.size(),ZMQ_SNDMORE);
-        zmq_send(socket,stream,nev,0);
+        streamer.send(&head.get()[0],head.size(),ZMQ_SNDMORE);
+        streamer.send(stream,nev,0);
       }
       else {
-        zmq_send(socket,head.get().c_str(),head.size(),0);
+        streamer.send(&head.get()[0],head.size(),0);
       }        
    
       ++count;
@@ -94,13 +73,11 @@ struct Generator {
 
 
 private:
-  int port, multiplier;
+  int multiplier;
   std::ifstream icf;
   uparam::Param ctl;
   Streamer streamer;
 
-  void* context;
-  void* socket;
   Header head;
 
   void get_control() {
@@ -152,7 +129,8 @@ struct HeaderJson {
     return content = std::string(cJSON_Print(root));;
   }
 
-  const std::string get() { return content; }
+  //  const std::string get() { return content; }
+  std::string get() { return content; }
 
   const int size() { return len; }
 
@@ -162,7 +140,5 @@ struct HeaderJson {
 
 
 
+#endif //GENERATOR_H
 
-struct ZmqGen {
-
-};
