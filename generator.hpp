@@ -16,20 +16,37 @@ extern "C" {
 #include "cJSON/cJSON.h"
 }
 
-
-///  \author Michele Brambilla <mib.mic@gmail.com>
-///  \date Wed Jun 08 15:19:52 2016
-template<typename Streamer, typename Header>
+/*! \struct Generator 
+ *
+ * The ``Generator`` send an event stream via the network using a templated
+ * protocol. The constructor receives a set of key-values and (optionally) a
+ * multiplier factor (unuseful so far). A header template is read from
+ * "header.in" and regularly modified to account for any change (number of
+ * events, hw status,...). To start the streaming use the method ``run``. It
+ * keeps sending data at a fixed frequency until a *pause* or *stop* control
+ * command is sent. Every 10s returns statistics and check for control
+ * parameters.
+ * 
+ * @tparam Streamer policy for stremer protocol (Kafka, 0MQ, ...)
+ * @tparam Header policy for creating the header (jSON, ...)
+ * @tparam Control policy to start, pause and stop the generator (plain text) - TODO
+ *
+ *  \author Michele Brambilla <mib.mic@gmail.com>
+ *  \date Wed Jun 08 15:19:52 2016 */
+template<typename Streamer, typename Header, typename Control>
 struct Generator {
   typedef  Generator self_t;
 
-Generator(const uparam::Param& p,
+  Generator(const uparam::Param& p,
             const int& m = 1) : streamer(p), 
                                 multiplier(m), 
                                 head("header.in") {
-get_control();
+    /*! @param p see uparam::Param for description. Set of key-value used for initializations. */
+    /*! @param m optional multiplier for emulating larger data size */
+    /*! Constructor: initialize the streamer, the header and the control. */
+    get_control();
   }
-
+  
   template<class T>
   void run(T* stream, int nev = 0) {
     
@@ -37,9 +54,10 @@ get_control();
     int count = 0;
     int start = time(0);
 
-    head.set(pulseID,time(0),1234567,nev,atoi(ctl["rate"].c_str()));
-
     while(ctl["run"] != "stop") {
+      head.set(pulseID,time(0),1234567,nev,atoi(ctl["rate"].c_str()));
+
+      // set send rate: TODO
       
       if(ctl["run"] == "run") {
         streamer.send(&head.get()[0],head.size(),ZMQ_SNDMORE);
@@ -60,7 +78,6 @@ get_control();
         std::cin >> count;
 
         get_control();
-        head.set(pulseID,time(0),1234567,nev,atoi(ctl["rate"].c_str()));
 
         count = 0;
         start = time(0);
