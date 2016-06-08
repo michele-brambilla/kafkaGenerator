@@ -25,7 +25,7 @@ start, pause or stop the generator.  The generator is started via the ``run``
 method, that requires a pointer to the data structure and the number of
 elements.
 
-```
+``` cpp
 //typedef ZmqGen generator_t;
 typedef KafkaGen generator_t;
 
