@@ -1,3 +1,5 @@
+
+#include "nexus_reader.hpp"
 #include "generator.hpp"
 
 
@@ -21,6 +23,12 @@ int main() {
   input["control"] = "control.in";
   input["topic"] = "test_0";
   input["brokers"] = "localhost";
+  
+  input["filename"] = "../../neventGenerator/rita22012n006190.hdf";
+
+  NeXusSource<Rita2,int64_t> stream(input);
+  return 0;
+
 
   Generator<generator_t,HeaderJson> g(input);
 

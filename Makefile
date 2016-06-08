@@ -3,11 +3,13 @@
 CC = gcc
 CXX = g++
 
-CCFLAGS = 
-CXXFLAGS = -I. -I${KAFKA_INCLUDE} -std=c++11
+NEXUS_PATH=/afs/psi.ch/project/sinq/sl6-64
 
-LDFLAGS = -L${KAFKA_LIBRARY_PATH}
-LIBS = -lrdkafka -lrdkafka++
+CCFLAGS = 
+CXXFLAGS = -std=c++11 -I. -I${KAFKA_INCLUDE}  -I${NEXUS_PATH}/include
+
+LDFLAGS = -L${KAFKA_LIBRARY_PATH} -L${NEXUS_PATH}/lib
+LIBS = -lrdkafka -lrdkafka++ -lNeXus -lNeXusCPP
 
 .SUFFIXES: 
 .SUFFIXES: .cpp .o
