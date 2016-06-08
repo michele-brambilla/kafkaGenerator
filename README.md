@@ -26,7 +26,8 @@ method, that requires a pointer to the data structure and the number of
 elements.
 
 
-```
+``` cpp
+
 //typedef ZmqGen generator_t;
 typedef KafkaGen generator_t;
 
@@ -50,10 +51,16 @@ int main() {
     d[i] = 2*i+1;
 
   // read NeXus or mcstas
+  NeXusSource<Rita2,int64_t> stream(input);
+  
+  uint64_t* d = new uint64_t[1024];
+  for(int i =0;i<1024;++i)
+    d[i] = 2*i+1;
+
+  Generator<generator_t,HeaderJson> g(input);
 
   g.run(d,1024);
 
   return 0;
 }
-
 ```
