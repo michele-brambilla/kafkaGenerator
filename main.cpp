@@ -2,9 +2,11 @@
 #include "nexus_reader.hpp"
 #include "generator.hpp"
 
+typedef Rita2 Instrument;
+typedef NeXusSource<Instrument> Source;
 
-//typedef ZmqGen generator_t;
-typedef KafkaGen generator_t;
+typedef ZmqGen generator_t;
+//typedef KafkaGen generator_t;
 
 
 
@@ -26,21 +28,11 @@ int main() {
   
   input["filename"] = "../../neventGenerator/rita22012n006190.hdf";
 
-  NeXusSource<Rita2,uint64_t> stream(input);
-  stream.read();
-  return 0;
-
+  Source stream(input);
 
   Generator<generator_t,HeaderJson,uint64_t> g(input);
 
-  uint64_t* d = new uint64_t[1024];
-  
-  for(int i =0;i<1024;++i)
-    d[i] = 2*i+1;
-
-  // read NeXus or mcstas
-
-  g.run(d,1024);
+  g.run(&(stream.begin()[0]),stream.count());
 
   return 0;
 }
