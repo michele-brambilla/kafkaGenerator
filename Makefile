@@ -28,10 +28,10 @@ producer: kafka_producer.o
 rdkafka_example: rdkafka_example.o
 	$(CXX) $(CXXFLAGS) -o $@ $^ $(LDFLAGS) $(LIBS)
 
-main: main.o generator.hpp zmq_generator.hpp kafka_generator.hpp uparam.hpp
+main: main.o
 	$(CXX) $(CXXFLAGS) -o $@ $^ -I. -IcJSON $(LDFLAGS) -LcJSON $(LIBS) -lcjson -lzmq -lsodium
 
-%.o : %.cpp
+%.o : %.cpp generator.hpp zmq_generator.hpp kafka_generator.hpp nexus_reader.hpp uparam.hpp
 	$(CXX) -c $(CXXFLAGS) $<
 
 .PHONY : clean

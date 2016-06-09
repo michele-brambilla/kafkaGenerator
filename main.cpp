@@ -26,11 +26,12 @@ int main() {
   
   input["filename"] = "../../neventGenerator/rita22012n006190.hdf";
 
-  NeXusSource<Rita2,int64_t> stream(input);
+  NeXusSource<Rita2,uint64_t> stream(input);
+  stream.read();
   return 0;
 
 
-  Generator<generator_t,HeaderJson> g(input);
+  Generator<generator_t,HeaderJson,uint64_t> g(input);
 
   uint64_t* d = new uint64_t[1024];
   
