@@ -1,16 +1,23 @@
+#ifndef _MAIN_H
+#define _MAIN_H
 
-// #include "nexus_reader.hpp"
-// #include "generator.hpp"
+#include "nexus_reader.hpp"
+#include "mcstas_reader.hpp"
+#include "generator.hpp"
 
-// typedef Rita2 Instrument;
-// typedef NeXusSource<Instrument> Source;
+// typedef nexus::Rita2 Instrument;
+// typedef nexus::NeXusSource<Instrument> Source;
 
-// typedef ZmqGen generator_t;
-// //typedef KafkaGen generator_t;
+typedef mcstas::Rita2 Instrument;
+typedef mcstas::McStasSource<Instrument> Source;
+
+typedef ZmqGen generator_t;
+//typedef KafkaGen generator_t;
 
 
 #include <iostream>
 #include <fstream>
+#include <iterator>
 
 #include <sstream>
 #include <cstring>
@@ -35,66 +42,20 @@ int main() {
   input["brokers"] = "localhost";
   
   input["filename"] = "../../neventGenerator/rita22012n006190.hdf";
-
-  std::string value;
-
-  std::ifstream in("../mcstasGenerator/sample/boa.tof");
-  while( in.good() ) {
-    std::getline (in,value);
-    if ( value[0] == '#' ) continue;
-    int counter = 0;
-    char *token = std::strtok(&value[0], " ");
-    while (token != NULL) {
-      if(counter == 0 || counter == 3) 
-        std::cout << atof(token) << '\t';
-      ++counter;
-      token = std::strtok(NULL, " ");
-    }
-    std::cout << std::endl;
-  }
-  in.close();
-
-
-  in.open("../mcstasGenerator/sample/boa.2d");
-  bool is_value=false;
-  int block=-1,n_row=0,n_col=0;
-  while( in.good() ) {
-    std::getline (in,value);
-    if ( value[0] == '#' ) {
-      is_value=false;
-      continue;
-    }
-    if( is_value == false ) {
-      ++block;
-      is_value = true;
-      std:: cout << "\nnuovo blocco(" << block << ")" << std::endl;
-    }
-    if(block != 2) continue;
-    n_row++;
-    char *token = std::strtok(&value[0], " ");
-    while (token != NULL) {
-      std::cout << atof(token) << "\t";
-      token = std::strtok(NULL, " ");
-      n_col++;
-    }
-    std::cout << std::endl;
-  }
-  std::cout << "n blocks = " << block << "\t"
-            << "n rows = "   << n_row << "\t"
-            << "n col = "    << (n_col/=n_row) << "\t"
-            << std::endl;
-  in.close();
-
-
-
+  input["1D"] = "sample/boa.tof";
+  input["2D"] = "sample/boa.2d";
 
   
-  // Source stream(input);
+  Source stream(input);
+  std::copy(stream.begin(),stream.end(),std::ostream_iterator<uint64_t>(std::cout, "\n")); 
+  
 
-  // Generator<generator_t,HeaderJson,uint64_t> g(input);
+  Generator<generator_t,HeaderJson,uint64_t> g(input);
 
-  // g.run(&(stream.begin()[0]),stream.count());
+  g.run(&(stream.begin()[0]),stream.count());
 
   return 0;
 }
 
+
+#endif //MAIN_H
