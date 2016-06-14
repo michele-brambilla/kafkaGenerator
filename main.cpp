@@ -50,7 +50,7 @@ int main() {
   std::copy(stream.begin(),stream.end(),std::ostream_iterator<uint64_t>(std::cout, "\n")); 
   
 
-  Generator<generator_t,HeaderJson,uint64_t> g(input);
+  Generator<generator_t,HeaderJson,FileControl> g(input);
 
   g.run(&(stream.begin()[0]),stream.count());
 

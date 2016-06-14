@@ -34,6 +34,9 @@ main: main.o
 	$(MAKE) -C cJSON/
 	$(CXX) $(CXXFLAGS) -o $@ $^ -I. -IcJSON $(LDFLAGS) -LcJSON $(LIBS) -lcjson -lzmq -lsodium
 
+doc:
+	cd docs; doxygen Doxyfile; cd ..
+
 %.o : %.cpp generator.hpp zmq_generator.hpp kafka_generator.hpp nexus_reader.hpp mcstas_reader.hpp uparam.hpp
 	$(CXX) -c $(CXXFLAGS) $<
 

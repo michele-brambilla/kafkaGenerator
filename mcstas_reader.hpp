@@ -15,6 +15,12 @@
 
 #include "uparam.hpp"
 
+
+/*! creates an event stream from a mcstas simulation output
+ *
+ *  \author Michele Brambilla <mib.mic@gmail.com>
+ *  \date Fri Jun 10 12:16:01 2016
+ */
 namespace mcstas {
   
   template<typename Instrument>

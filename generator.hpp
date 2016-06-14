@@ -37,29 +37,38 @@ template<typename Streamer, typename Header, typename Control>
 struct Generator {
   typedef  Generator self_t;
 
-  Generator(const uparam::Param& p,
+  Generator(uparam::Param& p,
             const int& m = 1) : streamer(p), 
                                 multiplier(m), 
-                                head("header.in") {
+                                head("header.in"),
+                                c(p["control"]) {
     /*! @param p see uparam::Param for description. Set of key-value used for initializations. */
     /*! @param m optional multiplier for emulating larger data size */
     /*! Constructor: initialize the streamer, the header and the control. */
-    get_control();
+    //    get_control();
   }
   
   template<class T>
   void run(T* stream, int nev = 0) {
+    run_impl(stream, nev);
+  }
+
+
+private:
+
+  template<class T>
+  void run_impl(T* stream, int nev = 0) {
     
     int pulseID = 0;
     int count = 0;
     int start = time(0);
 
-    while(ctl["run"] != "stop") {
-      head.set(pulseID,time(0),1234567,nev,atoi(ctl["rate"].c_str()));
+    while(!c.stop()) {
+      head.set(pulseID,time(0),1234567,nev,atoi(c["rate"].c_str()));
 
       // set send rate: TODO
       
-      if(ctl["run"] == "run") {
+      if(c.run()) {
         streamer.send(&head.get()[0],head.size(),ZMQ_SNDMORE);
         streamer.send(stream,nev,0);
       }
@@ -75,10 +84,8 @@ struct Generator {
                   << " packets @ " << count*nev*sizeof(T)/(10*1e6)
                   << "MB/s" 
                   << std::endl;
-        std::cin >> count;
-
-        get_control();
-
+        c.update();
+        //        get_control();
         count = 0;
         start = time(0);
       }
@@ -92,14 +99,16 @@ struct Generator {
 private:
   int multiplier;
   std::ifstream icf;
-  uparam::Param ctl;
+  //  uparam::Param ctl;
   Streamer streamer;
 
   Header head;
 
-  void get_control() {
-    ctl.read("control.in");
-  }
+  // void get_control() {
+  //   ctl.read("control.in");
+  // }
+
+  Control c;
 
 
 };
@@ -154,6 +163,52 @@ struct HeaderJson {
   std::string content;
   int len;
 };
+
+
+
+
+
+
+
+
+struct FileControl {
+  FileControl(uparam::Param in) : s(in["control"]) {
+    control.read(s);
+  }
+
+  FileControl(const std::string in) : s(in) {
+    control.read(s);
+  }
+
+  void update() {
+    control.read(s);
+  }
+
+  bool run() {
+    return control["run"] == "run";
+  }
+
+  bool pause() {
+    return control["run"] == "pause";
+  }
+
+  bool stop() {
+    return control["run"] == "stop";
+  }
+
+  std::string& operator [](std::string key) {
+    return control[key];
+  }
+
+private:
+  uparam::Param control;
+  const std::string s;
+};
+
+
+
+
+
 
 
 
