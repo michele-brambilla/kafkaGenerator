@@ -11,6 +11,10 @@
 typedef mcstas::Rita2 Instrument;
 typedef mcstas::McStasSource<Instrument> Source;
 
+//typedef control::FileControl Control;
+typedef control::CommandlineControl Control;
+
+
 typedef ZmqGen generator_t;
 //typedef KafkaGen generator_t;
 
@@ -47,10 +51,10 @@ int main() {
 
   
   Source stream(input);
-  std::copy(stream.begin(),stream.end(),std::ostream_iterator<uint64_t>(std::cout, "\n")); 
+  // std::copy(stream.begin(),stream.end(),std::ostream_iterator<uint64_t>(std::cout, "\n")); 
   
 
-  Generator<generator_t,HeaderJson,FileControl> g(input);
+  Generator<generator_t,HeaderJson,Control> g(input);
 
   g.run(&(stream.begin()[0]),stream.count());
 

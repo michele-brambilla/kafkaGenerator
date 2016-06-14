@@ -4,6 +4,7 @@
 #include <iostream>
 #include <fstream>
 #include <map>
+#include <thread>
 #include <assert.h>
 
 #include <stdlib.h>
@@ -11,6 +12,8 @@
 
 #include "zmq_generator.hpp"
 #include "kafka_generator.hpp"
+
+#include "control.hpp"
 
 extern "C" {
 #include "cJSON/cJSON.h"
@@ -35,7 +38,7 @@ extern "C" {
  *  \date Wed Jun 08 15:19:52 2016 */
 template<typename Streamer, typename Header, typename Control>
 struct Generator {
-  typedef  Generator self_t;
+  typedef Generator<Streamer,Header,Control> self_t;
 
   Generator(uparam::Param& p,
             const int& m = 1) : streamer(p), 
@@ -50,33 +53,35 @@ struct Generator {
   
   template<class T>
   void run(T* stream, int nev = 0) {
-    run_impl(stream, nev);
+    std::thread t1(&self_t::run_impl<uint64_t>,this,stream,nev);
+    c.read();
+    t1.join();
   }
-
+  
 
 private:
-
+  
   template<class T>
   void run_impl(T* stream, int nev = 0) {
     
     int pulseID = 0;
     int count = 0;
     int start = time(0);
-
+    
     while(!c.stop()) {
-      head.set(pulseID,time(0),1234567,nev,atoi(c["rate"].c_str()));
-
+      head.set(pulseID,time(0),1234567,nev,c.rate());
+      
       // set send rate: TODO
       
       if(c.run()) {
         streamer.send(&head.get()[0],head.size(),ZMQ_SNDMORE);
         streamer.send(stream,nev,0);
+        ++count;
       }
       else {
         streamer.send(&head.get()[0],head.size(),0);
       }        
    
-      ++count;
       ++pulseID;
 
       if(time(0) - start > 10) {
@@ -85,32 +90,20 @@ private:
                   << "MB/s" 
                   << std::endl;
         c.update();
-        //        get_control();
         count = 0;
         start = time(0);
       }
     }
-
-
- 
+    
   }
-
+  
 
 private:
   int multiplier;
-  std::ifstream icf;
-  //  uparam::Param ctl;
   Streamer streamer;
-
   Header head;
-
-  // void get_control() {
-  //   ctl.read("control.in");
-  // }
-
   Control c;
-
-
+  
 };
 
 
@@ -163,51 +156,6 @@ struct HeaderJson {
   std::string content;
   int len;
 };
-
-
-
-
-
-
-
-
-struct FileControl {
-  FileControl(uparam::Param in) : s(in["control"]) {
-    control.read(s);
-  }
-
-  FileControl(const std::string in) : s(in) {
-    control.read(s);
-  }
-
-  void update() {
-    control.read(s);
-  }
-
-  bool run() {
-    return control["run"] == "run";
-  }
-
-  bool pause() {
-    return control["run"] == "pause";
-  }
-
-  bool stop() {
-    return control["run"] == "stop";
-  }
-
-  std::string& operator [](std::string key) {
-    return control[key];
-  }
-
-private:
-  uparam::Param control;
-  const std::string s;
-};
-
-
-
-
 
 
 
