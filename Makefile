@@ -8,7 +8,7 @@ CXX = g++
 NEXUS_PATH=/afs/psi.ch/project/sinq/sl6-64
 
 CCFLAGS = 
-CXXFLAGS = -std=c++11 -I. -I${KAFKA_INCLUDE}  -I${NEXUS_PATH}/include -pthread
+CXXFLAGS = -std=c++11 -I. -I${KAFKA_INCLUDE}  -I${NEXUS_PATH}/include -pthread -D_GLIBCXX_USE_NANOSLEEP
 
 LDFLAGS = -L${KAFKA_LIBRARY_PATH} -L${NEXUS_PATH}/lib
 LIBS = -lrdkafka -lrdkafka++ -lNeXus -lNeXusCPP

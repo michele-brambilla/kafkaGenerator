@@ -5,7 +5,11 @@
 #include <fstream>
 #include <map>
 #include <thread>
+#include <chrono>
+#include <ctime>
+
 #include <assert.h>
+
 
 #include <stdlib.h>
 #include <time.h>
@@ -18,6 +22,9 @@
 extern "C" {
 #include "cJSON/cJSON.h"
 }
+
+
+
 
 /*! \struct Generator 
  *
@@ -61,17 +68,26 @@ struct Generator {
 
 private:
   
+  int multiplier;
+  Streamer streamer;
+  Header head;
+  Control c;
+
   template<class T>
   void run_impl(T* stream, int nev = 0) {
     
     int pulseID = 0;
     int count = 0;
-    int start = time(0);
+    double rate = c.rate();
     
+    using std::chrono::system_clock;
+    auto start = system_clock::now();
+    auto now = system_clock::now();
+
     while(!c.stop()) {
-      head.set(pulseID,time(0),1234567,nev,c.rate());
-      
-      // set send rate: TODO
+
+      now += std::chrono::microseconds((ulong)(1e6/rate));
+      head.set(pulseID,time(0),1234567,nev,rate);
       
       if(c.run()) {
         streamer.send(&head.get()[0],head.size(),ZMQ_SNDMORE);
@@ -84,26 +100,23 @@ private:
    
       ++pulseID;
 
-      if(time(0) - start > 10) {
+      std::this_thread::sleep_until (now);
+      if(std::chrono::duration_cast<std::chrono::seconds>(now - start).count() > 10) {
         std::cout << "Sent "       << count 
                   << " packets @ " << count*nev*sizeof(T)/(10*1e6)
                   << "MB/s" 
                   << std::endl;
         c.update();
+        rate = c.rate();
         count = 0;
-        start = time(0);
+        now = start = system_clock::now();
       }
     }
     
   }
   
-
-private:
-  int multiplier;
-  Streamer streamer;
-  Header head;
-  Control c;
   
+
 };
 
 
